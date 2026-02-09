@@ -74,11 +74,12 @@ h1 {
 
 <div class="section">
     <div class="label" id="schoolText"></div>
+    <div class="bar-container"><div class="bar" id="schoolBar"></div></div>
 </div>
 
 <script>
 
-// Schulstunden (anpassen!)
+// Schulstunden (hier anpassen!)
 const schoolHours = [
     "08:00",
     "08:45",
@@ -140,8 +141,9 @@ function update() {
     document.getElementById("yearText").textContent =
         daysToNextYear.toFixed(2) + " Tage bis zum nächsten Jahr";
 
-    // Schulstunde
+    // Schulstunde (bis nächster Stundenanfang)
     let nextLesson = null;
+
     for (let time of schoolHours) {
         const lessonTime = timeStringToDate(time);
         if (lessonTime > now) {
@@ -150,18 +152,26 @@ function update() {
         }
     }
 
-    if (nextLesson) {
-        const diff = (nextLesson - now) / 1000;
-        const minutesLeft = Math.floor(diff / 60);
-        const secondsLeft = Math.floor(diff % 60);
-
-        document.getElementById("schoolText").textContent =
-            "Nächste Schulstunde in " +
-            minutesLeft + " Minuten und " +
-            secondsLeft + " Sekunden";
-    } else {
+    if (!nextLesson) {
         document.getElementById("schoolText").textContent =
             "Heute keine weitere Schulstunde";
+        document.getElementById("schoolBar").style.width = "0%";
+    } else {
+        const secondsLeft = (nextLesson - now) / 1000;
+
+        const maxDuration = 60 * 60; // 60 Minuten
+        const percentRemaining = (secondsLeft / maxDuration) * 100;
+
+        document.getElementById("schoolBar").style.width =
+            percentRemaining + "%";
+
+        const minLeft = Math.floor(secondsLeft / 60);
+        const secLeft = Math.floor(secondsLeft % 60);
+
+        document.getElementById("schoolText").textContent =
+            "Nächster Stundenanfang in " +
+            minLeft + " Minuten und " +
+            secLeft + " Sekunden";
     }
 }
 
