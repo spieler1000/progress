@@ -2,40 +2,31 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<title>Zeit-Fortschritt</title>
+<title>Zeit-Übersicht</title>
 
 <style>
 body {
     margin: 0;
-    height: 100vh;
-    background: #0f0f0f;
+    background: #101010;
     color: white;
     font-family: Arial, sans-serif;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
+    padding: 20px;
 }
 
 h1 {
+    text-align: center;
     margin-bottom: 30px;
 }
 
 .section {
-    width: 80%;
-    max-width: 600px;
     margin-bottom: 25px;
-}
-
-.label {
-    margin-bottom: 5px;
 }
 
 .bar-container {
     width: 100%;
-    height: 30px;
+    height: 25px;
     background: #333;
-    border-radius: 8px;
+    border-radius: 6px;
     overflow: hidden;
 }
 
@@ -46,28 +37,8 @@ h1 {
     transition: width 0.1s linear;
 }
 
-/* Kreis */
-.circle-container {
-    margin-top: 40px;
-}
-
-svg {
-    transform: rotate(-90deg);
-}
-
-circle {
-    fill: none;
-    stroke-width: 12;
-}
-
-.background-circle {
-    stroke: #333;
-}
-
-.progress-circle {
-    stroke: #00ccff;
-    stroke-linecap: round;
-    transition: stroke-dashoffset 0.1s linear;
+.label {
+    margin-bottom: 6px;
 }
 </style>
 </head>
@@ -78,72 +49,125 @@ circle {
 
 <div class="section">
     <div class="label" id="secText"></div>
-    <div class="bar-container">
-        <div class="bar" id="secBar"></div>
-    </div>
+    <div class="bar-container"><div class="bar" id="secBar"></div></div>
 </div>
 
 <div class="section">
     <div class="label" id="minText"></div>
-    <div class="bar-container">
-        <div class="bar" id="minBar"></div>
-    </div>
+    <div class="bar-container"><div class="bar" id="minBar"></div></div>
 </div>
 
 <div class="section">
     <div class="label" id="hourText"></div>
-    <div class="bar-container">
-        <div class="bar" id="hourBar"></div>
-    </div>
+    <div class="bar-container"><div class="bar" id="hourBar"></div></div>
 </div>
 
-<div class="circle-container">
-    <svg width="150" height="150">
-        <circle class="background-circle" cx="75" cy="75" r="60"></circle>
-        <circle class="progress-circle" cx="75" cy="75" r="60"
-            stroke-dasharray="377"
-            stroke-dashoffset="377"
-            id="circleProgress">
-        </circle>
-    </svg>
+<div class="section">
+    <div class="label" id="monthText"></div>
+    <div class="bar-container"><div class="bar" id="monthBar"></div></div>
+</div>
+
+<div class="section">
+    <div class="label" id="yearText"></div>
+    <div class="bar-container"><div class="bar" id="yearBar"></div></div>
+</div>
+
+<div class="section">
+    <div class="label" id="schoolText"></div>
 </div>
 
 <script>
-const circle = document.getElementById("circleProgress");
-const circumference = 2 * Math.PI * 60;
+
+// Schulstunden (anpassen!)
+const schoolHours = [
+    "08:00",
+    "08:45",
+    "09:50",
+    "10:35",
+    "11:40",
+    "12:25",
+    "13:30",
+    "14:15"
+];
+
+function timeStringToDate(timeStr) {
+    const now = new Date();
+    const [h, m] = timeStr.split(":");
+    const date = new Date(now);
+    date.setHours(h, m, 0, 0);
+    return date;
+}
 
 function update() {
     const now = new Date();
 
-    const seconds = now.getSeconds() + now.getMilliseconds() / 1000;
-    const minutes = now.getMinutes() + seconds / 60;
-    const hours = now.getHours() + minutes / 60;
+    const seconds = now.getSeconds() + now.getMilliseconds()/1000;
+    const minutes = now.getMinutes() + seconds/60;
+    const hours = now.getHours() + minutes/60;
 
     // Sekunden
-    const secPercent = (seconds / 60) * 100;
-    document.getElementById("secBar").style.width = secPercent + "%";
+    document.getElementById("secBar").style.width = (seconds/60)*100 + "%";
     document.getElementById("secText").textContent =
-        "Sekunden: " + (60 - seconds).toFixed(2) + " bis zur nächsten Minute";
+        "Sekunden: " + (60-seconds).toFixed(2) + " bis zur nächsten Minute";
 
     // Minuten
-    const minPercent = (minutes / 60) * 100;
-    document.getElementById("minBar").style.width = minPercent + "%";
+    document.getElementById("minBar").style.width = (minutes/60)*100 + "%";
     document.getElementById("minText").textContent =
-        "Minuten: " + (60 - minutes).toFixed(2) + " bis zur nächsten Stunde";
+        "Minuten: " + (60-minutes).toFixed(2) + " bis zur nächsten Stunde";
 
     // Stunden
-    const hourPercent = (hours / 24) * 100;
-    document.getElementById("hourBar").style.width = hourPercent + "%";
+    document.getElementById("hourBar").style.width = (hours/24)*100 + "%";
     document.getElementById("hourText").textContent =
-        "Stunden: " + (24 - hours).toFixed(2) + " bis zum nächsten Tag";
+        "Stunden: " + (24-hours).toFixed(2) + " bis zum nächsten Tag";
 
-    // Kreis (Sekunden)
-    const offset = circumference - (seconds / 60) * circumference;
-    circle.style.strokeDashoffset = offset;
+    // Monat
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    const nextMonth = new Date(now.getFullYear(), now.getMonth()+1, 1);
+    const monthProgress = (now - startOfMonth) / (nextMonth - startOfMonth);
+    document.getElementById("monthBar").style.width = monthProgress*100 + "%";
+
+    const daysToNextMonth = (nextMonth - now) / (1000*60*60*24);
+    document.getElementById("monthText").textContent =
+        daysToNextMonth.toFixed(2) + " Tage bis zum nächsten Monat";
+
+    // Jahr
+    const startOfYear = new Date(now.getFullYear(), 0, 1);
+    const nextYear = new Date(now.getFullYear()+1, 0, 1);
+    const yearProgress = (now - startOfYear) / (nextYear - startOfYear);
+    document.getElementById("yearBar").style.width = yearProgress*100 + "%";
+
+    const daysToNextYear = (nextYear - now) / (1000*60*60*24);
+    document.getElementById("yearText").textContent =
+        daysToNextYear.toFixed(2) + " Tage bis zum nächsten Jahr";
+
+    // Schulstunde
+    let nextLesson = null;
+    for (let time of schoolHours) {
+        const lessonTime = timeStringToDate(time);
+        if (lessonTime > now) {
+            nextLesson = lessonTime;
+            break;
+        }
+    }
+
+    if (nextLesson) {
+        const diff = (nextLesson - now) / 1000;
+        const minutesLeft = Math.floor(diff / 60);
+        const secondsLeft = Math.floor(diff % 60);
+
+        document.getElementById("schoolText").textContent =
+            "Nächste Schulstunde in " +
+            minutesLeft + " Minuten und " +
+            secondsLeft + " Sekunden";
+    } else {
+        document.getElementById("schoolText").textContent =
+            "Heute keine weitere Schulstunde";
+    }
 }
 
-setInterval(update, 50);
+setInterval(update, 100);
 update();
+
 </script>
 
 </body>
