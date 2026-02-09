@@ -1,76 +1,150 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-    <meta charset="UTF-8">
-    <title>Countdown zur nächsten Minute</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #111;
-            color: white;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 100vh;
-            margin: 0;
-        }
+<meta charset="UTF-8">
+<title>Zeit-Fortschritt</title>
 
-        h1 {
-            margin-bottom: 20px;
-        }
+<style>
+body {
+    margin: 0;
+    height: 100vh;
+    background: #0f0f0f;
+    color: white;
+    font-family: Arial, sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
 
-        .bar-container {
-            width: 80%;
-            max-width: 600px;
-            height: 40px;
-            background-color: #333;
-            border-radius: 10px;
-            overflow: hidden;
-            margin-bottom: 15px;
-        }
+h1 {
+    margin-bottom: 30px;
+}
 
-        .bar {
-            height: 100%;
-            width: 0%;
-            background: linear-gradient(90deg, #00ff88, #00ccff);
-            transition: width 0.2s linear;
-        }
+.section {
+    width: 80%;
+    max-width: 600px;
+    margin-bottom: 25px;
+}
 
-        .time-text {
-            font-size: 1.5rem;
-        }
-    </style>
+.label {
+    margin-bottom: 5px;
+}
+
+.bar-container {
+    width: 100%;
+    height: 30px;
+    background: #333;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.bar {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, #00ff88, #00ccff);
+    transition: width 0.1s linear;
+}
+
+/* Kreis */
+.circle-container {
+    margin-top: 40px;
+}
+
+svg {
+    transform: rotate(-90deg);
+}
+
+circle {
+    fill: none;
+    stroke-width: 12;
+}
+
+.background-circle {
+    stroke: #333;
+}
+
+.progress-circle {
+    stroke: #00ccff;
+    stroke-linecap: round;
+    transition: stroke-dashoffset 0.1s linear;
+}
+</style>
 </head>
+
 <body>
 
-    <h1>Countdown zur nächsten Minute</h1>
+<h1>Zeit bis zum nächsten Abschnitt</h1>
 
+<div class="section">
+    <div class="label" id="secText"></div>
     <div class="bar-container">
-        <div class="bar" id="progressBar"></div>
+        <div class="bar" id="secBar"></div>
     </div>
+</div>
 
-    <div class="time-text" id="timeText"></div>
+<div class="section">
+    <div class="label" id="minText"></div>
+    <div class="bar-container">
+        <div class="bar" id="minBar"></div>
+    </div>
+</div>
 
-    <script>
-        function updateBar() {
-            const now = new Date();
-            const seconds = now.getSeconds();
-            const milliseconds = now.getMilliseconds();
+<div class="section">
+    <div class="label" id="hourText"></div>
+    <div class="bar-container">
+        <div class="bar" id="hourBar"></div>
+    </div>
+</div>
 
-            const totalSeconds = seconds + milliseconds / 1000;
-            const percentage = (totalSeconds / 60) * 100;
+<div class="circle-container">
+    <svg width="150" height="150">
+        <circle class="background-circle" cx="75" cy="75" r="60"></circle>
+        <circle class="progress-circle" cx="75" cy="75" r="60"
+            stroke-dasharray="377"
+            stroke-dashoffset="377"
+            id="circleProgress">
+        </circle>
+    </svg>
+</div>
 
-            const remainingSeconds = 60 - totalSeconds;
+<script>
+const circle = document.getElementById("circleProgress");
+const circumference = 2 * Math.PI * 60;
 
-            document.getElementById("progressBar").style.width = percentage + "%";
-            document.getElementById("timeText").textContent =
-                "Noch " + remainingSeconds.toFixed(2) + " Sekunden bis zur nächsten Minute";
-        }
+function update() {
+    const now = new Date();
 
-        setInterval(updateBar, 50);
-        updateBar();
-    </script>
+    const seconds = now.getSeconds() + now.getMilliseconds() / 1000;
+    const minutes = now.getMinutes() + seconds / 60;
+    const hours = now.getHours() + minutes / 60;
+
+    // Sekunden
+    const secPercent = (seconds / 60) * 100;
+    document.getElementById("secBar").style.width = secPercent + "%";
+    document.getElementById("secText").textContent =
+        "Sekunden: " + (60 - seconds).toFixed(2) + " bis zur nächsten Minute";
+
+    // Minuten
+    const minPercent = (minutes / 60) * 100;
+    document.getElementById("minBar").style.width = minPercent + "%";
+    document.getElementById("minText").textContent =
+        "Minuten: " + (60 - minutes).toFixed(2) + " bis zur nächsten Stunde";
+
+    // Stunden
+    const hourPercent = (hours / 24) * 100;
+    document.getElementById("hourBar").style.width = hourPercent + "%";
+    document.getElementById("hourText").textContent =
+        "Stunden: " + (24 - hours).toFixed(2) + " bis zum nächsten Tag";
+
+    // Kreis (Sekunden)
+    const offset = circumference - (seconds / 60) * circumference;
+    circle.style.strokeDashoffset = offset;
+}
+
+setInterval(update, 50);
+update();
+</script>
 
 </body>
 </html>
