@@ -2,12 +2,75 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="style.css">
-    <link href='https://fonts.googleapis.com/css?family=Josefin Sans' rel='stylesheet'>
-    <title>Progress</title>
+    <title>Countdown zur nächsten Minute</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #111;
+            color: white;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        h1 {
+            margin-bottom: 20px;
+        }
+
+        .bar-container {
+            width: 80%;
+            max-width: 600px;
+            height: 40px;
+            background-color: #333;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-bottom: 15px;
+        }
+
+        .bar {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #00ff88, #00ccff);
+            transition: width 0.2s linear;
+        }
+
+        .time-text {
+            font-size: 1.5rem;
+        }
+    </style>
 </head>
 <body>
-    <h3>This Day</h3>
+
+    <h1>Countdown zur nächsten Minute</h1>
+
+    <div class="bar-container">
+        <div class="bar" id="progressBar"></div>
+    </div>
+
+    <div class="time-text" id="timeText"></div>
+
+    <script>
+        function updateBar() {
+            const now = new Date();
+            const seconds = now.getSeconds();
+            const milliseconds = now.getMilliseconds();
+
+            const totalSeconds = seconds + milliseconds / 1000;
+            const percentage = (totalSeconds / 60) * 100;
+
+            const remainingSeconds = 60 - totalSeconds;
+
+            document.getElementById("progressBar").style.width = percentage + "%";
+            document.getElementById("timeText").textContent =
+                "Noch " + remainingSeconds.toFixed(2) + " Sekunden bis zur nächsten Minute";
+        }
+
+        setInterval(updateBar, 50);
+        updateBar();
+    </script>
+
 </body>
 </html>
