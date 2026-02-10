@@ -2,31 +2,39 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<title>Zeit-Übersicht</title>
+<title>Stundenwechsel</title>
 
 <style>
 body {
     margin: 0;
-    background: #101010;
+    background: #111;
     color: white;
     font-family: Arial, sans-serif;
-    padding: 20px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+}
+
+.container {
+    width: 600px;
 }
 
 h1 {
     text-align: center;
-    margin-bottom: 30px;
+    margin-bottom: 40px;
 }
 
-.section {
-    margin-bottom: 25px;
+.label {
+    margin-bottom: 12px;
+    font-size: 18px;
 }
 
 .bar-container {
     width: 100%;
-    height: 25px;
+    height: 35px;
     background: #333;
-    border-radius: 6px;
+    border-radius: 8px;
     overflow: hidden;
 }
 
@@ -36,143 +44,94 @@ h1 {
     background: linear-gradient(90deg, #00ff88, #00ccff);
     transition: width 0.1s linear;
 }
-
-.label {
-    margin-bottom: 6px;
-}
 </style>
 </head>
 
 <body>
 
-<h1>Zeit bis zum nächsten Abschnitt</h1>
-
-<div class="section">
-    <div class="label" id="secText"></div>
-    <div class="bar-container"><div class="bar" id="secBar"></div></div>
-</div>
-
-<div class="section">
-    <div class="label" id="minText"></div>
-    <div class="bar-container"><div class="bar" id="minBar"></div></div>
-</div>
-
-<div class="section">
-    <div class="label" id="hourText"></div>
-    <div class="bar-container"><div class="bar" id="hourBar"></div></div>
-</div>
-
-<div class="section">
-    <div class="label" id="monthText"></div>
-    <div class="bar-container"><div class="bar" id="monthBar"></div></div>
-</div>
-
-<div class="section">
-    <div class="label" id="yearText"></div>
-    <div class="bar-container"><div class="bar" id="yearBar"></div></div>
-</div>
-
-<div class="section">
-    <div class="label" id="schoolText"></div>
-    <div class="bar-container"><div class="bar" id="schoolBar"></div></div>
+<div class="container">
+    <h1>Zeit bis zum nächsten Stundenwechsel</h1>
+    <div class="label" id="text"></div>
+    <div class="bar-container">
+        <div class="bar" id="bar"></div>
+    </div>
 </div>
 
 <script>
 
-// Schulstunden (hier anpassen!)
-const schoolHours = [
-    "08:00",
-    "08:45",
-    "09:50",
-    "10:35",
-    "11:40",
-    "12:25",
-    "13:30",
-    "14:15"
+const wechselZeiten = [
+    "07:55",
+    "08:40",
+    "09:25",
+    "10:30",
+    "11:15",
+    "12:20",
+    "13:05"
 ];
 
-function timeStringToDate(timeStr) {
+function toToday(timeStr) {
     const now = new Date();
     const [h, m] = timeStr.split(":");
-    const date = new Date(now);
-    date.setHours(h, m, 0, 0);
-    return date;
+    const d = new Date(now);
+    d.setHours(parseInt(h), parseInt(m), 0, 0);
+    return d;
 }
 
 function update() {
     const now = new Date();
+    const text = document.getElementById("text");
+    const bar = document.getElementById("bar");
 
-    const seconds = now.getSeconds() + now.getMilliseconds()/1000;
-    const minutes = now.getMinutes() + seconds/60;
-    const hours = now.getHours() + minutes/60;
+    const times = wechselZeiten.map(t => toToday(t));
 
-    // Sekunden
-    document.getElementById("secBar").style.width = (seconds/60)*100 + "%";
-    document.getElementById("secText").textContent =
-        "Sekunden: " + (60-seconds).toFixed(2) + " bis zur nächsten Minute";
+    let previous = null;
+    let next = null;
 
-    // Minuten
-    document.getElementById("minBar").style.width = (minutes/60)*100 + "%";
-    document.getElementById("minText").textContent =
-        "Minuten: " + (60-minutes).toFixed(2) + " bis zur nächsten Stunde";
-
-    // Stunden
-    document.getElementById("hourBar").style.width = (hours/24)*100 + "%";
-    document.getElementById("hourText").textContent =
-        "Stunden: " + (24-hours).toFixed(2) + " bis zum nächsten Tag";
-
-    // Monat
-    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-    const nextMonth = new Date(now.getFullYear(), now.getMonth()+1, 1);
-    const monthProgress = (now - startOfMonth) / (nextMonth - startOfMonth);
-    document.getElementById("monthBar").style.width = monthProgress*100 + "%";
-
-    const daysToNextMonth = (nextMonth - now) / (1000*60*60*24);
-    document.getElementById("monthText").textContent =
-        daysToNextMonth.toFixed(2) + " Tage bis zum nächsten Monat";
-
-    // Jahr
-    const startOfYear = new Date(now.getFullYear(), 0, 1);
-    const nextYear = new Date(now.getFullYear()+1, 0, 1);
-    const yearProgress = (now - startOfYear) / (nextYear - startOfYear);
-    document.getElementById("yearBar").style.width = yearProgress*100 + "%";
-
-    const daysToNextYear = (nextYear - now) / (1000*60*60*24);
-    document.getElementById("yearText").textContent =
-        daysToNextYear.toFixed(2) + " Tage bis zum nächsten Jahr";
-
-    // Schulstunde (bis nächster Stundenanfang)
-    let nextLesson = null;
-
-    for (let time of schoolHours) {
-        const lessonTime = timeStringToDate(time);
-        if (lessonTime > now) {
-            nextLesson = lessonTime;
+    for (let i = 0; i < times.length; i++) {
+        if (times[i] > now) {
+            next = times[i];
+            previous = times[i - 1] || null;
             break;
         }
     }
 
-    if (!nextLesson) {
-        document.getElementById("schoolText").textContent =
-            "Heute keine weitere Schulstunde";
-        document.getElementById("schoolBar").style.width = "0%";
-    } else {
-        const secondsLeft = (nextLesson - now) / 1000;
-
-        const maxDuration = 60 * 60; // 60 Minuten
-        const percentRemaining = (secondsLeft / maxDuration) * 100;
-
-        document.getElementById("schoolBar").style.width =
-            percentRemaining + "%";
-
-        const minLeft = Math.floor(secondsLeft / 60);
-        const secLeft = Math.floor(secondsLeft % 60);
-
-        document.getElementById("schoolText").textContent =
-            "Nächster Stundenanfang in " +
-            minLeft + " Minuten und " +
-            secLeft + " Sekunden";
+    if (!next) {
+        text.textContent = "Heute kein weiterer Stundenwechsel";
+        bar.style.width = "0%";
+        return;
     }
+
+    if (!previous) {
+        // Vor dem ersten Wechsel
+        const remaining = next - now;
+        const seconds = Math.floor(remaining / 1000);
+        const min = Math.floor(seconds / 60);
+        const sec = seconds % 60;
+
+        text.textContent =
+            "Erster Stundenwechsel in " +
+            min + " Minuten und " +
+            sec + " Sekunden";
+
+        bar.style.width = "0%";
+        return;
+    }
+
+    const total = next - previous;
+    const passed = now - previous;
+    const remaining = next - now;
+
+    const percent = (passed / total) * 100;
+    bar.style.width = percent + "%";
+
+    const seconds = Math.floor(remaining / 1000);
+    const min = Math.floor(seconds / 60);
+    const sec = seconds % 60;
+
+    text.textContent =
+        "Nächster Stundenwechsel in " +
+        min + " Minuten und " +
+        sec + " Sekunden";
 }
 
 setInterval(update, 100);
