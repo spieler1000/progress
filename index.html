@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<title>Stundenwechsel</title>
+<title>Zeitübersicht</title>
 
 <style>
 body {
@@ -13,7 +13,7 @@ body {
     display: flex;
     justify-content: center;
     align-items: center;
-    height: 100vh;
+    min-height: 100vh;
 }
 
 .container {
@@ -23,6 +23,10 @@ body {
 h1 {
     text-align: center;
     margin-bottom: 40px;
+}
+
+.section {
+    margin-bottom: 35px;
 }
 
 .label {
@@ -50,15 +54,28 @@ h1 {
 <body>
 
 <div class="container">
-    <h1>Zeit bis zum nächsten Stundenwechsel</h1>
-    <div class="label" id="text"></div>
-    <div class="bar-container">
-        <div class="bar" id="bar"></div>
+    <h1>Zeit-Übersicht</h1>
+
+    <!-- Stundenwechsel -->
+    <div class="section">
+        <div class="label" id="schoolText"></div>
+        <div class="bar-container">
+            <div class="bar" id="schoolBar"></div>
+        </div>
+    </div>
+
+    <!-- Tagesende -->
+    <div class="section">
+        <div class="label" id="dayText"></div>
+        <div class="bar-container">
+            <div class="bar" id="dayBar"></div>
+        </div>
     </div>
 </div>
 
 <script>
 
+// Stundenwechsel
 const wechselZeiten = [
     "07:55",
     "08:40",
@@ -79,8 +96,15 @@ function toToday(timeStr) {
 
 function update() {
     const now = new Date();
-    const text = document.getElementById("text");
-    const bar = document.getElementById("bar");
+
+    updateStundenwechsel(now);
+    updateTagesende(now);
+}
+
+// Stundenwechsel-Logik
+function updateStundenwechsel(now) {
+    const text = document.getElementById("schoolText");
+    const bar = document.getElementById("schoolBar");
 
     const times = wechselZeiten.map(t => toToday(t));
 
@@ -102,16 +126,13 @@ function update() {
     }
 
     if (!previous) {
-        // Vor dem ersten Wechsel
         const remaining = next - now;
-        const seconds = Math.floor(remaining / 1000);
-        const min = Math.floor(seconds / 60);
-        const sec = seconds % 60;
+        const min = Math.floor(remaining / 60000);
+        const sec = Math.floor((remaining % 60000) / 1000);
 
         text.textContent =
             "Erster Stundenwechsel in " +
-            min + " Minuten und " +
-            sec + " Sekunden";
+            min + " Minuten und " + sec + " Sekunden";
 
         bar.style.width = "0%";
         return;
@@ -121,17 +142,40 @@ function update() {
     const passed = now - previous;
     const remaining = next - now;
 
-    const percent = (passed / total) * 100;
-    bar.style.width = percent + "%";
+    bar.style.width = (passed / total) * 100 + "%";
 
-    const seconds = Math.floor(remaining / 1000);
-    const min = Math.floor(seconds / 60);
-    const sec = seconds % 60;
+    const min = Math.floor(remaining / 60000);
+    const sec = Math.floor((remaining % 60000) / 1000);
 
     text.textContent =
         "Nächster Stundenwechsel in " +
-        min + " Minuten und " +
-        sec + " Sekunden";
+        min + " Minuten und " + sec + " Sekunden";
+}
+
+// Tagesende-Logik
+function updateTagesende(now) {
+    const text = document.getElementById("dayText");
+    const bar = document.getElementById("dayBar");
+
+    const endOfDay = new Date(now);
+    endOfDay.setHours(24, 0, 0, 0);
+
+    const startOfDay = new Date(now);
+    startOfDay.setHours(0, 0, 0, 0);
+
+    const total = endOfDay - startOfDay;
+    const passed = now - startOfDay;
+    const remaining = endOfDay - now;
+
+    bar.style.width = (passed / total) * 100 + "%";
+
+    const hoursLeft = Math.floor(remaining / (1000 * 60 * 60));
+    const minutesLeft = Math.floor((remaining % (1000 * 60 * 60)) / (1000 * 60));
+
+    text.textContent =
+        "Tagesende in " +
+        hoursLeft + " Stunden und " +
+        minutesLeft + " Minuten";
 }
 
 setInterval(update, 100);
