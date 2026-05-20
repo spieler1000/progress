@@ -6,22 +6,22 @@
   <title>Time Dashboard</title>
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="min-h-screen bg-black text-white overflow-hidden relative flex items-center justify-center p-6">
+<body class="min-h-screen bg-black text-white relative flex items-center justify-center p-6 overflow-y-auto">
   <div class="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(59,130,246,0.25),transparent_40%),radial-gradient(circle_at_bottom,rgba(168,85,247,0.2),transparent_40%)]"></div>
 
   <div class="relative z-10 w-full max-w-3xl rounded-3xl border border-white/10 bg-white/5 backdrop-blur-2xl shadow-2xl p-8 md:p-12 overflow-hidden">
     <div class="flex items-center justify-between mb-8 gap-4 flex-wrap">
       <div class="flex gap-2 bg-black/30 border border-white/10 rounded-2xl p-2">
-        <button id="normalBtn" class="px-5 py-2 rounded-xl text-sm font-semibold bg-cyan-400 text-black transition-all">
+        <button id="normalBtn" class="px-5 py-2 rounded-xl text-sm font-semibold bg-cyan-400 text-black transition-all duration-500 ease-out">
           Normal
         </button>
 
-        <button id="schoolBtn" class="px-5 py-2 rounded-xl text-sm font-semibold text-zinc-400 transition-all">
+        <button id="schoolBtn" class="px-5 py-2 rounded-xl text-sm font-semibold text-zinc-400 transition-all duration-500 ease-out">
           Schule
         </button>
       </div>
 
-      <p class="text-zinc-500 text-sm">Swipe links/rechts zum Wechseln</p>
+      <p class="text-zinc-500 text-sm">Zeit Dashboard</p>
     </div>
 
     <div class="flex flex-col gap-2 mb-10">
@@ -60,7 +60,7 @@
         </div>
 
         <div class="h-5 overflow-hidden rounded-full bg-zinc-900 border border-zinc-700">
-          <div id="schoolProgressBar" class="h-full rounded-full bg-gradient-to-r from-emerald-400 via-cyan-400 to-blue-500 transition-all duration-500"></div>
+          <div id="schoolProgressBar" class="h-full rounded-full bg-gradient-to-r from-emerald-400 via-cyan-400 to-blue-500 transition-all duration-500 ease-out duration-1000 ease-out"></div>
         </div>
       </div>
 
@@ -119,33 +119,21 @@
         normalView.classList.remove("hidden");
         schoolView.classList.add("hidden");
 
-        normalBtn.className = "px-5 py-2 rounded-xl text-sm font-semibold bg-cyan-400 text-black transition-all";
-        schoolBtn.className = "px-5 py-2 rounded-xl text-sm font-semibold text-zinc-400 transition-all";
+        normalBtn.className = "px-5 py-2 rounded-xl text-sm font-semibold bg-cyan-400 text-black transition-all duration-500 ease-out";
+        schoolBtn.className = "px-5 py-2 rounded-xl text-sm font-semibold text-zinc-400 transition-all duration-500 ease-out";
       } else {
         normalView.classList.add("hidden");
         schoolView.classList.remove("hidden");
 
-        schoolBtn.className = "px-5 py-2 rounded-xl text-sm font-semibold bg-purple-400 text-black transition-all";
-        normalBtn.className = "px-5 py-2 rounded-xl text-sm font-semibold text-zinc-400 transition-all";
+        schoolBtn.className = "px-5 py-2 rounded-xl text-sm font-semibold bg-purple-400 text-black transition-all duration-500 ease-out";
+        normalBtn.className = "px-5 py-2 rounded-xl text-sm font-semibold text-zinc-400 transition-all duration-500 ease-out";
       }
     }
 
     normalBtn.onclick = () => switchMode("normal");
     schoolBtn.onclick = () => switchMode("school");
 
-    let startX = 0;
-
-    window.addEventListener("touchstart", (e) => {
-      startX = e.touches[0].clientX;
-    });
-
-    window.addEventListener("touchend", (e) => {
-      const diff = e.changedTouches[0].clientX - startX;
-
-      if (Math.abs(diff) > 60) {
-        switchMode(mode === "normal" ? "school" : "normal");
-      }
-    });
+    
 
     function createProgressBar(label, progress, remaining) {
       return `
@@ -156,7 +144,7 @@
           </div>
 
           <div class="h-4 w-full overflow-hidden rounded-full bg-zinc-800 border border-zinc-700">
-            <div class="h-full rounded-full bg-gradient-to-r from-cyan-400 via-blue-500 to-purple-500 transition-all duration-500" style="width:${progress}%"></div>
+            <div class="h-full rounded-full bg-gradient-to-r from-cyan-400 via-blue-500 to-purple-500 transition-all duration-500 ease-out duration-1000 ease-out" style="width:${progress}%"></div>
           </div>
         </div>
       `;
