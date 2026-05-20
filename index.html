@@ -1,301 +1,281 @@
-import React from "react";
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Time Dashboard</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="min-h-screen bg-black text-white overflow-hidden relative flex items-center justify-center p-6">
+  <div class="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(59,130,246,0.25),transparent_40%),radial-gradient(circle_at_bottom,rgba(168,85,247,0.2),transparent_40%)]"></div>
 
-export default function TimeDashboard() {
-  const schoolSchedule = [
-    { label: "Schulstart", time: "07:55" },
-    { label: "1. Wechsel", time: "08:40" },
-    { label: "2. Wechsel", time: "09:25" },
-    { label: "Pause", time: "09:45" },
-    { label: "3. Wechsel", time: "10:30" },
-    { label: "4. Wechsel", time: "11:15" },
-    { label: "Pause", time: "11:35" },
-    { label: "5. Wechsel", time: "12:20" },
-    { label: "Schulende", time: "13:05" },
-  ];
-  const now = new Date();
+  <div class="relative z-10 w-full max-w-3xl rounded-3xl border border-white/10 bg-white/5 backdrop-blur-2xl shadow-2xl p-8 md:p-12 overflow-hidden">
+    <div class="flex items-center justify-between mb-8 gap-4 flex-wrap">
+      <div class="flex gap-2 bg-black/30 border border-white/10 rounded-2xl p-2">
+        <button id="normalBtn" class="px-5 py-2 rounded-xl text-sm font-semibold bg-cyan-400 text-black transition-all">
+          Normal
+        </button>
 
-  const seconds = now.getSeconds();
-  const minutes = now.getMinutes();
-  const hours = now.getHours();
-  const day = now.getDay() === 0 ? 7 : now.getDay();
-  const date = now.getDate();
-  const month = now.getMonth() + 1;
-
-  const secondProgress = (seconds / 60) * 100;
-  const minuteProgress = ((minutes * 60 + seconds) / 3600) * 100;
-  const hourProgress = ((hours * 3600 + minutes * 60 + seconds) / 86400) * 100;
-  const weekProgress = (((day - 1) * 86400 + hours * 3600 + minutes * 60 + seconds) / (7 * 86400)) * 100;
-
-  const daysInMonth = new Date(now.getFullYear(), month, 0).getDate();
-  const monthProgress = ((date - 1 + hourProgress / 100) / daysInMonth) * 100;
-
-  const yearStart = new Date(now.getFullYear(), 0, 1);
-  const yearEnd = new Date(now.getFullYear() + 1, 0, 1);
-  const yearProgress = ((now - yearStart) / (yearEnd - yearStart)) * 100;
-
-  const formatTime = (value) => value.toString().padStart(2, "0");
-
-  const currentTime = `${formatTime(hours)}:${formatTime(minutes)}:${formatTime(seconds)}`;
-
-  const nowInMinutes = hours * 60 + minutes + seconds / 60;
-
-  const parsedSchedule = schoolSchedule.map((entry) => {
-    const [h, m] = entry.time.split(":").map(Number);
-    return {
-      ...entry,
-      minutes: h * 60 + m,
-    };
-  });
-
-  const schoolStart = parsedSchedule[0].minutes;
-  const schoolEnd = parsedSchedule[parsedSchedule.length - 1].minutes;
-
-  const nextEvent = parsedSchedule.find((e) => e.minutes > nowInMinutes);
-
-  const passedLessons = parsedSchedule.filter(
-    (e) => e.label.includes("Wechsel") && e.minutes <= nowInMinutes
-  ).length;
-
-  const remainingLessons = Math.max(0, 5 - passedLessons);
-
-  const schoolProgress =
-    nowInMinutes < schoolStart
-      ? 0
-      : nowInMinutes > schoolEnd
-      ? 100
-      : ((nowInMinutes - schoolStart) / (schoolEnd - schoolStart)) * 100;
-
-  const minutesUntilNextEvent = nextEvent
-    ? Math.floor(nextEvent.minutes - nowInMinutes)
-    : 0;
-
-  const ProgressBar = ({ label, progress, remaining }) => (
-    <div className="space-y-2">
-      <div className="flex items-center justify-between text-sm text-zinc-300">
-        <span>{label}</span>
-        <span>{remaining}</span>
+        <button id="schoolBtn" class="px-5 py-2 rounded-xl text-sm font-semibold text-zinc-400 transition-all">
+          Schule
+        </button>
       </div>
 
-      <div className="h-4 w-full overflow-hidden rounded-full bg-zinc-800 border border-zinc-700">
-        <div
-          className="h-full rounded-full bg-gradient-to-r from-cyan-400 via-blue-500 to-purple-500 transition-all duration-500"
-          style={{ width: `${progress}%` }}
-        />
+      <p class="text-zinc-500 text-sm">Swipe links/rechts zum Wechseln</p>
+    </div>
+
+    <div class="flex flex-col gap-2 mb-10">
+      <p class="uppercase tracking-[0.3em] text-zinc-400 text-xs">
+        Live Time Dashboard
+      </p>
+
+      <h1 id="clock" class="text-5xl md:text-7xl font-black tracking-tight bg-gradient-to-r from-white via-cyan-200 to-purple-300 bg-clip-text text-transparent">
+        00:00:00
+      </h1>
+
+      <p id="date" class="text-zinc-400 text-sm md:text-base"></p>
+    </div>
+
+    <div id="schoolView" class="hidden mb-10 rounded-3xl border border-cyan-500/20 bg-cyan-500/5 p-6 backdrop-blur-xl">
+      <div class="flex items-center justify-between gap-4 flex-wrap mb-6">
+        <div>
+          <p class="text-cyan-300 uppercase tracking-[0.2em] text-xs mb-2">
+            Schulübersicht
+          </p>
+
+          <h2 id="remainingLessons" class="text-3xl font-black"></h2>
+        </div>
+
+        <div class="text-right">
+          <p class="text-zinc-400 text-sm">Nächstes Event</p>
+          <h3 id="nextEventTime" class="text-2xl font-bold"></h3>
+          <p id="nextEventLabel" class="text-zinc-500 text-sm"></p>
+        </div>
+      </div>
+
+      <div class="mb-4">
+        <div class="flex justify-between text-sm text-zinc-300 mb-2">
+          <span>Schultag vorbei</span>
+          <span id="schoolProgressText"></span>
+        </div>
+
+        <div class="h-5 overflow-hidden rounded-full bg-zinc-900 border border-zinc-700">
+          <div id="schoolProgressBar" class="h-full rounded-full bg-gradient-to-r from-emerald-400 via-cyan-400 to-blue-500 transition-all duration-500"></div>
+        </div>
+      </div>
+
+      <div id="scheduleList" class="mt-6 rounded-2xl border border-white/10 bg-black/20 overflow-hidden"></div>
+    </div>
+
+    <div id="normalView" class="grid gap-6"></div>
+
+    <div class="mt-10 grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div class="rounded-2xl bg-white/5 border border-white/10 p-4">
+        <p class="text-zinc-400 text-xs uppercase">Sekunden</p>
+        <h2 id="secondsValue" class="text-3xl font-bold mt-2"></h2>
+      </div>
+
+      <div class="rounded-2xl bg-white/5 border border-white/10 p-4">
+        <p class="text-zinc-400 text-xs uppercase">Minuten</p>
+        <h2 id="minutesValue" class="text-3xl font-bold mt-2"></h2>
+      </div>
+
+      <div class="rounded-2xl bg-white/5 border border-white/10 p-4">
+        <p class="text-zinc-400 text-xs uppercase">Stunden</p>
+        <h2 id="hoursValue" class="text-3xl font-bold mt-2"></h2>
+      </div>
+
+      <div class="rounded-2xl bg-white/5 border border-white/10 p-4">
+        <p class="text-zinc-400 text-xs uppercase">Tag der Woche</p>
+        <h2 id="dayValue" class="text-3xl font-bold mt-2"></h2>
       </div>
     </div>
-  );
+  </div>
 
-  const [mode, setMode] = React.useState("normal");
+  <script>
+    const schoolSchedule = [
+      { label: "Schulstart", time: "07:55" },
+      { label: "Stundenwechsel", time: "08:40" },
+      { label: "1. Pause beginnt", time: "09:25" },
+      { label: "1. Pause endet", time: "09:45" },
+      { label: "Stundenwechsel", time: "10:30" },
+      { label: "2. Pause beginnt", time: "11:15" },
+      { label: "2. Pause endet", time: "11:35" },
+      { label: "Stundenwechsel", time: "12:20" },
+      { label: "Schulende", time: "13:05" },
+    ];
 
-  React.useEffect(() => {
+    let mode = "normal";
+
+    const normalBtn = document.getElementById("normalBtn");
+    const schoolBtn = document.getElementById("schoolBtn");
+    const normalView = document.getElementById("normalView");
+    const schoolView = document.getElementById("schoolView");
+
+    function switchMode(newMode) {
+      mode = newMode;
+
+      if (mode === "normal") {
+        normalView.classList.remove("hidden");
+        schoolView.classList.add("hidden");
+
+        normalBtn.className = "px-5 py-2 rounded-xl text-sm font-semibold bg-cyan-400 text-black transition-all";
+        schoolBtn.className = "px-5 py-2 rounded-xl text-sm font-semibold text-zinc-400 transition-all";
+      } else {
+        normalView.classList.add("hidden");
+        schoolView.classList.remove("hidden");
+
+        schoolBtn.className = "px-5 py-2 rounded-xl text-sm font-semibold bg-purple-400 text-black transition-all";
+        normalBtn.className = "px-5 py-2 rounded-xl text-sm font-semibold text-zinc-400 transition-all";
+      }
+    }
+
+    normalBtn.onclick = () => switchMode("normal");
+    schoolBtn.onclick = () => switchMode("school");
+
     let startX = 0;
 
-    const handleTouchStart = (e) => {
+    window.addEventListener("touchstart", (e) => {
       startX = e.touches[0].clientX;
-    };
+    });
 
-    const handleTouchEnd = (e) => {
-      const endX = e.changedTouches[0].clientX;
-      const diff = endX - startX;
+    window.addEventListener("touchend", (e) => {
+      const diff = e.changedTouches[0].clientX - startX;
 
       if (Math.abs(diff) > 60) {
-        setMode((prev) => (prev === "normal" ? "school" : "normal"));
+        switchMode(mode === "normal" ? "school" : "normal");
       }
-    };
+    });
 
-    window.addEventListener("touchstart", handleTouchStart);
-    window.addEventListener("touchend", handleTouchEnd);
-
-    return () => {
-      window.removeEventListener("touchstart", handleTouchStart);
-      window.removeEventListener("touchend", handleTouchEnd);
-    };
-  }, []);
-
-  return (
-    <div className="min-h-screen bg-black text-white flex items-center justify-center p-6 overflow-hidden relative">
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(59,130,246,0.25),transparent_40%),radial-gradient(circle_at_bottom,rgba(168,85,247,0.2),transparent_40%)]" />
-
-      <div className="relative z-10 w-full max-w-3xl rounded-3xl border border-white/10 bg-white/5 backdrop-blur-2xl shadow-2xl p-8 md:p-12 overflow-hidden">
-        <div className="flex items-center justify-between mb-8 gap-4 flex-wrap">
-          <div className="flex gap-2 bg-black/30 border border-white/10 rounded-2xl p-2">
-            <button
-              onClick={() => setMode("normal")}
-              className={`px-5 py-2 rounded-xl text-sm font-semibold transition-all ${
-                mode === "normal"
-                  ? "bg-cyan-400 text-black"
-                  : "text-zinc-400 hover:text-white"
-              }`}
-            >
-              Normal
-            </button>
-
-            <button
-              onClick={() => setMode("school")}
-              className={`px-5 py-2 rounded-xl text-sm font-semibold transition-all ${
-                mode === "school"
-                  ? "bg-purple-400 text-black"
-                  : "text-zinc-400 hover:text-white"
-              }`}
-            >
-              Schule
-            </button>
+    function createProgressBar(label, progress, remaining) {
+      return `
+        <div class="space-y-2">
+          <div class="flex items-center justify-between text-sm text-zinc-300">
+            <span>${label}</span>
+            <span>${remaining}</span>
           </div>
 
-          <p className="text-zinc-500 text-sm">
-            Swipe links/rechts zum Wechseln
-          </p>
-        </div>
-        <div className="flex flex-col gap-2 mb-10">
-          <p className="uppercase tracking-[0.3em] text-zinc-400 text-xs">
-            Live Time Dashboard
-          </p>
-
-          <h1 className="text-5xl md:text-7xl font-black tracking-tight bg-gradient-to-r from-white via-cyan-200 to-purple-300 bg-clip-text text-transparent">
-            {currentTime}
-          </h1>
-
-          <p className="text-zinc-400 text-sm md:text-base">
-            {now.toLocaleDateString("de-DE", {
-              weekday: "long",
-              year: "numeric",
-              month: "long",
-              day: "numeric",
-            })}
-          </p>
-        </div>
-
-        {mode === "school" && (
-        <div className="mb-10 rounded-3xl border border-cyan-500/20 bg-cyan-500/5 p-6 backdrop-blur-xl">
-          <div className="flex items-center justify-between gap-4 flex-wrap mb-6">
-            <div>
-              <p className="text-cyan-300 uppercase tracking-[0.2em] text-xs mb-2">
-                Schulübersicht
-              </p>
-
-              <h2 className="text-3xl font-black">
-                {remainingLessons} Schulstunden übrig
-              </h2>
-            </div>
-
-            <div className="text-right">
-              <p className="text-zinc-400 text-sm">Nächstes Event</p>
-              <h3 className="text-2xl font-bold">
-                {nextEvent ? nextEvent.time : "Vorbei"}
-              </h3>
-              <p className="text-zinc-500 text-sm">
-                {nextEvent ? nextEvent.label : "Schule beendet"}
-              </p>
-            </div>
-          </div>
-
-          <div className="mb-4">
-            <div className="flex justify-between text-sm text-zinc-300 mb-2">
-              <span>Schultag vorbei</span>
-              <span>
-                {nextEvent
-                  ? `${minutesUntilNextEvent}min bis ${nextEvent.label}`
-                  : "Fertig"}
-              </span>
-            </div>
-
-            <div className="h-5 overflow-hidden rounded-full bg-zinc-900 border border-zinc-700">
-              <div
-                className="h-full rounded-full bg-gradient-to-r from-emerald-400 via-cyan-400 to-blue-500 transition-all duration-500"
-                style={{ width: `${schoolProgress}%` }}
-              />
-            </div>
-          </div>
-
-          <div className="grid md:grid-cols-3 gap-3 mt-6">
-            {parsedSchedule.map((entry, index) => {
-              const active =
-                nowInMinutes >= entry.minutes &&
-                (!parsedSchedule[index + 1] ||
-                  nowInMinutes < parsedSchedule[index + 1].minutes);
-
-              return (
-                <div
-                  key={entry.time + index}
-                  className={`rounded-2xl border p-4 transition-all ${
-                    active
-                      ? "border-cyan-400 bg-cyan-400/10"
-                      : "border-white/10 bg-white/5"
-                  }`}
-                >
-                  <p className="text-zinc-400 text-xs uppercase">
-                    {entry.label}
-                  </p>
-                  <h3 className="text-2xl font-bold mt-1">{entry.time}</h3>
-                </div>
-              );
-            })}
+          <div class="h-4 w-full overflow-hidden rounded-full bg-zinc-800 border border-zinc-700">
+            <div class="h-full rounded-full bg-gradient-to-r from-cyan-400 via-blue-500 to-purple-500 transition-all duration-500" style="width:${progress}%"></div>
           </div>
         </div>
-        )}
+      `;
+    }
 
-        {mode === "normal" && (
-        <div className="grid gap-6">
-          <ProgressBar
-            label="Minute vorbei"
-            progress={secondProgress}
-            remaining={`${60 - seconds}s übrig`}
-          />
+    function updateDashboard() {
+      const now = new Date();
 
-          <ProgressBar
-            label="Stunde vorbei"
-            progress={minuteProgress}
-            remaining={`${59 - minutes}min übrig`}
-          />
+      const seconds = now.getSeconds();
+      const minutes = now.getMinutes();
+      const hours = now.getHours();
+      const day = now.getDay() === 0 ? 7 : now.getDay();
+      const date = now.getDate();
+      const month = now.getMonth() + 1;
 
-          <ProgressBar
-            label="Tag vorbei"
-            progress={hourProgress}
-            remaining={`${23 - hours}h übrig`}
-          />
+      const format = (v) => v.toString().padStart(2, "0");
 
-          <ProgressBar
-            label="Woche vorbei"
-            progress={weekProgress}
-            remaining={`${7 - day} Tage übrig`}
-          />
+      document.getElementById("clock").textContent = `${format(hours)}:${format(minutes)}:${format(seconds)}`;
 
-          <ProgressBar
-            label="Monat vorbei"
-            progress={monthProgress}
-            remaining={`${daysInMonth - date} Tage übrig`}
-          />
+      document.getElementById("date").textContent = now.toLocaleDateString("de-DE", {
+        weekday: "long",
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+      });
 
-          <ProgressBar
-            label="Jahr vorbei"
-            progress={yearProgress}
-            remaining={`${100 - yearProgress.toFixed(1)}% übrig`}
-          />
-        </div>
-        )}
+      document.getElementById("secondsValue").textContent = seconds;
+      document.getElementById("minutesValue").textContent = minutes;
+      document.getElementById("hoursValue").textContent = hours;
+      document.getElementById("dayValue").textContent = day;
 
-        <div className="mt-10 grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div className="rounded-2xl bg-white/5 border border-white/10 p-4">
-            <p className="text-zinc-400 text-xs uppercase">Sekunden</p>
-            <h2 className="text-3xl font-bold mt-2">{seconds}</h2>
+      const secondProgress = (seconds / 60) * 100;
+      const minuteProgress = ((minutes * 60 + seconds) / 3600) * 100;
+      const hourProgress = ((hours * 3600 + minutes * 60 + seconds) / 86400) * 100;
+      const weekProgress = (((day - 1) * 86400 + hours * 3600 + minutes * 60 + seconds) / (7 * 86400)) * 100;
+
+      const daysInMonth = new Date(now.getFullYear(), month, 0).getDate();
+      const monthProgress = ((date - 1 + hourProgress / 100) / daysInMonth) * 100;
+
+      const yearStart = new Date(now.getFullYear(), 0, 1);
+      const yearEnd = new Date(now.getFullYear() + 1, 0, 1);
+      const yearProgress = ((now - yearStart) / (yearEnd - yearStart)) * 100;
+
+      normalView.innerHTML = `
+        ${createProgressBar("Minute vorbei", secondProgress, `${60 - seconds}s übrig`)}
+        ${createProgressBar("Stunde vorbei", minuteProgress, `${59 - minutes}min übrig`)}
+        ${createProgressBar("Tag vorbei", hourProgress, `${23 - hours}h übrig`)}
+        ${createProgressBar("Woche vorbei", weekProgress, `${7 - day} Tage übrig`)}
+        ${createProgressBar("Monat vorbei", monthProgress, `${daysInMonth - date} Tage übrig`)}
+        ${createProgressBar("Jahr vorbei", yearProgress, `${(100 - yearProgress).toFixed(1)}% übrig`)}
+      `;
+
+      const nowInMinutes = hours * 60 + minutes + seconds / 60;
+
+      const parsedSchedule = schoolSchedule.map((entry) => {
+        const [h, m] = entry.time.split(":").map(Number);
+
+        return {
+          ...entry,
+          minutes: h * 60 + m,
+        };
+      });
+
+      const nextEvent = parsedSchedule.find((e) => e.minutes > nowInMinutes);
+
+      const totalLessons = 6;
+
+      const passedLessons =
+        nowInMinutes >= 13 * 60 + 5
+          ? totalLessons
+          : nowInMinutes >= 12 * 60 + 20
+          ? 5
+          : nowInMinutes >= 11 * 60 + 35
+          ? 4
+          : nowInMinutes >= 10 * 60 + 30
+          ? 3
+          : nowInMinutes >= 9 * 60 + 45
+          ? 2
+          : nowInMinutes >= 8 * 60 + 40
+          ? 1
+          : 0;
+
+      document.getElementById("remainingLessons").textContent = `${totalLessons - passedLessons} Schulstunden übrig`;
+
+      document.getElementById("nextEventTime").textContent = nextEvent ? nextEvent.time : "Vorbei";
+      document.getElementById("nextEventLabel").textContent = nextEvent ? nextEvent.label : "Schule beendet";
+
+      const schoolStart = parsedSchedule[0].minutes;
+      const schoolEnd = parsedSchedule[parsedSchedule.length - 1].minutes;
+
+      const schoolProgress =
+        nowInMinutes < schoolStart
+          ? 0
+          : nowInMinutes > schoolEnd
+          ? 100
+          : ((nowInMinutes - schoolStart) / (schoolEnd - schoolStart)) * 100;
+
+      document.getElementById("schoolProgressBar").style.width = `${schoolProgress}%`;
+
+      document.getElementById("schoolProgressText").textContent = nextEvent
+        ? `${Math.floor(nextEvent.minutes - nowInMinutes)}min bis ${nextEvent.label}`
+        : "Fertig";
+
+      document.getElementById("scheduleList").innerHTML = parsedSchedule.map((entry, index) => {
+        const active =
+          nowInMinutes >= entry.minutes &&
+          (!parsedSchedule[index + 1] || nowInMinutes < parsedSchedule[index + 1].minutes);
+
+        return `
+          <div class="flex items-center justify-between px-4 py-3 border-b border-white/5 ${active ? "bg-cyan-400/10" : ""}">
+            <p class="text-sm font-medium">${entry.label}</p>
+            <p class="text-base font-bold">${entry.time}</p>
           </div>
+        `;
+      }).join("");
+    }
 
-          <div className="rounded-2xl bg-white/5 border border-white/10 p-4">
-            <p className="text-zinc-400 text-xs uppercase">Minuten</p>
-            <h2 className="text-3xl font-bold mt-2">{minutes}</h2>
-          </div>
-
-          <div className="rounded-2xl bg-white/5 border border-white/10 p-4">
-            <p className="text-zinc-400 text-xs uppercase">Stunden</p>
-            <h2 className="text-3xl font-bold mt-2">{hours}</h2>
-          </div>
-
-          <div className="rounded-2xl bg-white/5 border border-white/10 p-4">
-            <p className="text-zinc-400 text-xs uppercase">Tag der Woche</p>
-            <h2 className="text-3xl font-bold mt-2">{day}</h2>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
+    updateDashboard();
+    setInterval(updateDashboard, 1000);
+  </script>
+</body>
+</html>
