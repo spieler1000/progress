@@ -24,19 +24,33 @@
       <p class="text-zinc-500 text-sm">Zeit Dashboard</p>
     </div>
 
-    <div class="flex flex-col gap-2 mb-10">
-      <p class="uppercase tracking-[0.3em] text-zinc-400 text-xs">
-        Live Time Dashboard
-      </p>
+    <div class="mb-10 flex flex-col lg:flex-row lg:items-end lg:justify-between gap-6">
+      <div>
+        <p class="uppercase tracking-[0.35em] text-zinc-500 text-xs mb-3">
+          Live Dashboard
+        </p>
 
-      <h1 id="clock" class="text-5xl md:text-7xl font-black tracking-tight bg-gradient-to-r from-white via-cyan-200 to-purple-300 bg-clip-text text-transparent">
-        00:00:00
-      </h1>
+        <h1 id="clock" class="text-6xl md:text-7xl font-black tracking-tight leading-none bg-gradient-to-r from-white via-cyan-200 to-purple-300 bg-clip-text text-transparent">
+          00:00:00
+        </h1>
 
-      <p id="date" class="text-zinc-400 text-sm md:text-base"></p>
+        <p id="date" class="mt-3 text-zinc-400 text-sm md:text-base"></p>
+      </div>
+
+      <div class="grid grid-cols-2 gap-3 min-w-[240px]">
+        <div class="rounded-2xl border border-white/10 bg-white/5 p-4 backdrop-blur-xl">
+          <p class="text-zinc-500 text-xs uppercase mb-1">Modus</p>
+          <h2 id="modeLabel" class="text-xl font-bold">Normal</h2>
+        </div>
+
+        <div class="rounded-2xl border border-white/10 bg-white/5 p-4 backdrop-blur-xl">
+          <p class="text-zinc-500 text-xs uppercase mb-1">Status</p>
+          <h2 id="statusLabel" class="text-xl font-bold">Aktiv</h2>
+        </div>
+      </div>
     </div>
 
-    <div id="schoolView" class="hidden mb-10 rounded-3xl border border-cyan-500/20 bg-cyan-500/5 p-6 backdrop-blur-xl">
+    <div id="schoolView" class="hidden mb-10 rounded-3xl border border-cyan-500/20 bg-gradient-to-br from-cyan-500/10 to-blue-500/5 p-6 backdrop-blur-xl shadow-xl">
       <div class="flex items-center justify-between gap-4 flex-wrap mb-6">
         <div>
           <p class="text-cyan-300 uppercase tracking-[0.2em] text-xs mb-2">
@@ -60,7 +74,7 @@
         </div>
 
         <div class="h-5 overflow-hidden rounded-full bg-zinc-900 border border-zinc-700">
-          <div id="schoolProgressBar" class="h-full rounded-full bg-gradient-to-r from-emerald-400 via-cyan-400 to-blue-500 transition-all duration-500 ease-out duration-1000 ease-out"></div>
+          <div id="schoolProgressBar" class="h-full rounded-full bg-gradient-to-r from-emerald-400 via-cyan-400 to-blue-500 transition-all duration-[1500ms] ease-out"></div>
         </div>
       </div>
 
@@ -78,9 +92,26 @@
       <div id="scheduleList" class="mt-6 rounded-2xl border border-white/10 bg-black/20 overflow-hidden"></div>
     </div>
 
-    <div id="normalView" class="grid gap-6"></div>
+    <div>
+      <div class="flex items-center justify-between mb-5">
+        <div>
+          <h2 class="text-2xl font-bold">Zeitfortschritt</h2>
+          <p class="text-zinc-500 text-sm">Live-Übersicht aller Zeitbereiche</p>
+        </div>
+      </div>
 
-    <div class="mt-10 grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div id="normalView" class="grid gap-5"></div>
+    </div>
+
+    <div class="mt-10">
+      <div class="flex items-center justify-between mb-5">
+        <div>
+          <h2 class="text-2xl font-bold">Live Werte</h2>
+          <p class="text-zinc-500 text-sm">Aktuelle Zeitdaten in Echtzeit</p>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
       <div class="rounded-2xl bg-white/5 border border-white/10 p-4">
         <p class="text-zinc-400 text-xs uppercase">Sekunden</p>
         <h2 id="secondsValue" class="text-3xl font-bold mt-2"></h2>
@@ -139,6 +170,16 @@
         normalBtn.className = "px-5 py-2 rounded-xl text-sm font-semibold bg-cyan-400 text-black transition-all duration-500 ease-out";
         schoolBtn.className = "px-5 py-2 rounded-xl text-sm font-semibold text-zinc-400 transition-all duration-500 ease-out";
       } else {
+        normalView.classList.add("hidden");
+        schoolView.classList.remove("hidden");
+
+        schoolBtn.className = "px-5 py-2 rounded-xl text-sm font-semibold bg-purple-400 text-black transition-all duration-500 ease-out";
+        normalBtn.className = "px-5 py-2 rounded-xl text-sm font-semibold text-zinc-400 transition-all duration-500 ease-out";
+      }
+
+      document.getElementById("modeLabel").textContent = mode === "school" ? "Schule" : "Normal";
+      document.getElementById("statusLabel").textContent = mode === "school" ? "Unterricht" : "Zeittracking";
+    } else {
         normalView.classList.add("hidden");
         schoolView.classList.remove("hidden");
 
@@ -212,12 +253,12 @@
       const yearProgress = ((now - yearStart) / (yearEnd - yearStart)) * 100;
 
       normalView.innerHTML = `
-        ${createProgressBar("Minute vorbei", secondProgress, `${60 - seconds}s übrig`)}
-        ${createProgressBar("Stunde vorbei", minuteProgress, `${59 - minutes}min übrig`)}
-        ${createProgressBar("Tag vorbei", hourProgress, `${23 - hours}h übrig`)}
-        ${createProgressBar("Woche vorbei", weekProgress, `${7 - day} Tage übrig`)}
-        ${createProgressBar("Monat vorbei", monthProgress, `${daysInMonth - date} Tage übrig`)}
-        ${createProgressBar("Jahr vorbei", yearProgress, `${(100 - yearProgress).toFixed(1)}% übrig`)}
+        ${createProgressBar("Minute vorbei", secondProgress, `${59 - seconds}s ${1000 - now.getMilliseconds()}ms übrig`)}
+        ${createProgressBar("Stunde vorbei", minuteProgress, `${59 - minutes}min ${59 - seconds}s übrig`)}
+        ${createProgressBar("Tag vorbei", hourProgress, `${23 - hours}h ${59 - minutes}min übrig`)}
+        ${createProgressBar("Woche vorbei", weekProgress, `${7 - day} Tage ${23 - hours}h übrig`)}
+        ${createProgressBar("Monat vorbei", monthProgress, `${daysInMonth - date} Tage ${23 - hours}h übrig`)}
+        ${createProgressBar("Jahr vorbei", yearProgress, `${(100 - yearProgress).toFixed(3)}% übrig`)}
       `;
 
       const nowInMinutes = hours * 60 + minutes + seconds / 60;
