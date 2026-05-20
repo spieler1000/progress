@@ -64,6 +64,17 @@
         </div>
       </div>
 
+      <div class="mt-6 mb-6">
+        <div class="flex items-center justify-between text-sm text-zinc-300 mb-2">
+          <span id="currentPhaseLabel">Aktuelle Phase</span>
+          <span id="phaseRemaining"></span>
+        </div>
+
+        <div class="h-4 overflow-hidden rounded-full bg-zinc-900 border border-zinc-700">
+          <div id="phaseProgressBar" class="h-full rounded-full bg-gradient-to-r from-purple-400 via-pink-400 to-cyan-400 transition-all duration-1000 ease-out" style="width:0%"></div>
+        </div>
+      </div>
+
       <div id="scheduleList" class="mt-6 rounded-2xl border border-white/10 bg-black/20 overflow-hidden"></div>
     </div>
 
@@ -94,15 +105,21 @@
 
   <script>
     const schoolSchedule = [
-      { label: "Schulstart", time: "07:55" },
-      { label: "Stundenwechsel", time: "08:40" },
-      { label: "1. Pause beginnt", time: "09:25" },
-      { label: "1. Pause endet", time: "09:45" },
-      { label: "Stundenwechsel", time: "10:30" },
-      { label: "2. Pause beginnt", time: "11:15" },
-      { label: "2. Pause endet", time: "11:35" },
-      { label: "Stundenwechsel", time: "12:20" },
+      { label: "1. Stunde", time: "07:55" },
+      { label: "2. Stunde", time: "08:40" },
+      { label: "1. Pause", time: "09:25" },
+      { label: "3. Stunde", time: "09:45" },
+      { label: "4. Stunde", time: "10:30" },
+      { label: "2. Pause", time: "11:15" },
+      { label: "5. Stunde", time: "11:35" },
+      { label: "6. Stunde", time: "12:20" },
       { label: "Schulende", time: "13:05" },
+    ];
+
+    const thursdayExtraSchedule = [
+      { label: "Mittagspause", time: "13:05" },
+      { label: "8. Stunde", time: "13:50" },
+      { label: "Schulende", time: "14:35" },
     ];
 
     let mode = "normal";
@@ -153,6 +170,12 @@
     function updateDashboard() {
       const now = new Date();
 
+      const isThursday = now.getDay() === 4;
+
+      const activeSchedule = isThursday
+        ? [...schoolSchedule.slice(0, -1), ...thursdayExtraSchedule]
+        : schoolSchedule;
+
       const seconds = now.getSeconds();
       const minutes = now.getMinutes();
       const hours = now.getHours();
@@ -199,7 +222,7 @@
 
       const nowInMinutes = hours * 60 + minutes + seconds / 60;
 
-      const parsedSchedule = schoolSchedule.map((entry) => {
+      const parsedSchedule = activeSchedule.map((entry) => {
         const [h, m] = entry.time.split(":").map(Number);
 
         return {
@@ -247,6 +270,41 @@
       document.getElementById("schoolProgressText").textContent = nextEvent
         ? `${Math.floor(nextEvent.minutes - nowInMinutes)}min bis ${nextEvent.label}`
         : "Fertig";
+
+      let currentIndex = 0;
+
+      for (let i = 0; i < parsedSchedule.length - 1; i++) {
+        if (
+          nowInMinutes >= parsedSchedule[i].minutes &&
+          nowInMinutes < parsedSchedule[i + 1].minutes
+        ) {
+          currentIndex = i;
+          break;
+        }
+      }
+
+      const currentPhase = parsedSchedule[currentIndex];
+      const nextPhase = parsedSchedule[currentIndex + 1];
+
+      let phaseProgress = 100;
+      let phaseRemaining = "Fertig";
+
+      if (currentPhase && nextPhase) {
+        const duration = nextPhase.minutes - currentPhase.minutes;
+        const passed = nowInMinutes - currentPhase.minutes;
+
+        phaseProgress = Math.max(0, Math.min(100, (passed / duration) * 100));
+
+        phaseRemaining = `${Math.floor(nextPhase.minutes - nowInMinutes)}min bis ${nextPhase.label}`;
+      }
+
+      document.getElementById("currentPhaseLabel").textContent = currentPhase
+        ? currentPhase.label
+        : "Keine aktive Phase";
+
+      document.getElementById("phaseRemaining").textContent = phaseRemaining;
+
+      document.getElementById("phaseProgressBar").style.width = `${phaseProgress}%`;
 
       document.getElementById("scheduleList").innerHTML = parsedSchedule.map((entry, index) => {
         const active =
